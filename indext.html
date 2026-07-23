@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: #333;
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .cell {
+            background-color: #f0f4f8;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background-color: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .cell.x {
+            color: #ef4444; /* Merah untuk X */
+        }
+
+        .cell.o {
+            color: #3b82f6; /* Biru untuk O */
+        }
+
+        .cell.winning-cell {
+            background-color: #dcfce7; /* Hijau muda jika menang */
+            border-color: #22c55e;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .status-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            min-height: 2rem; /* Mencegah layout loncat saat teks berubah */
+        }
+
+        .reset-btn {
+            background-color: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Pill shape */
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);
+        }
+
+        .reset-btn:hover {
+            background-color: #7c3aed;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .score-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .score-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .score-x { color: #ef4444; }
+        .score-o { color: #3b82f6; }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Tic-Tac-Toe</h1>
+        
+        <div id="status" class="status-text text-gray-600">Giliran Pemain: <span id="current-player-display" class="text-red-500 font-bold">X</span></div>
+
+        <div class="board" id="board">
+            <!-- 9 Sel untuk permainan -->
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <button id="reset-button" class="reset-btn mt-4">Mulai Ulang</button>
+
+        <div class="score-board">
+            <div class="score-item">
+                <span class="score-label">Pemain (X)</span>
+                <span class="score-value score-x" id="score-x">0</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Seri</span>
+                <span class="score-value text-gray-600" id="score-draw">0</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Pemain (O)</span>
+                <span class="score-value score-o" id="score-o">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cells = document.querySelectorAll('.cell');
+            const statusDisplay = document.getElementById('status');
+            const currentPlayerDisplay = document.getElementById('current-player-display');
+            const resetButton = document.getElementById('reset-button');
+            const scoreXDisplay = document.getElementById('score-x');
+            const scoreODisplay = document.getElementById('score-o');
+            const scoreDrawDisplay = document.getElementById('score-draw');
+
+            let board = ["", "", "", "", "", "", "", "", ""];
+            let currentPlayer = "X";
+            let isGameActive = true;
+            
+            // Skor
+            let scores = {
+                'X': 0,
+                'O': 0,
+                'Draws': 0
+            };
+
+            // Kondisi kemenangan yang mungkin (indeks array)
+            const winningConditions = [
+                [0, 1, 2], // Baris 1
+                [3, 4, 5], // Baris 2
+                [6, 7, 8], // Baris 3
+                [0, 3, 6], // Kolom 1
+                [1, 4, 7], // Kolom 2
+                [2, 5, 8], // Kolom 3
+                [0, 4, 8], // Diagonal 1
+                [2, 4, 6]  // Diagonal 2
+            ];
+
+            function handleCellClick(event) {
+                const clickedCell = event.target;
+                const cellIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+                // Cek apakah sel sudah terisi atau game sudah selesai
+                if (board[cellIndex] !== "" || !isGameActive) {
+                    return;
+                }
+
+                // Update state game
+                updateCell(clickedCell, cellIndex);
+                checkResult();
+            }
+
+            function updateCell(cell, index) {
+                board[index] = currentPlayer;
+                cell.innerText = currentPlayer;
+                cell.classList.add(currentPlayer.toLowerCase()); // Tambah class 'x' atau 'o' untuk warna
+            }
+
+            function checkResult() {
+                let roundWon = false;
+                let winningCells = [];
+
+                // Cek setiap kondisi kemenangan
+                for (let i = 0; i < winningConditions.length; i++) {
+                    const [a, b, c] = winningConditions[i];
+                    
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        roundWon = true;
+                        winningCells = [a, b, c];
+                        break;
+                    }
+                }
+
+                if (roundWon) {
+                    // Tindakan jika ada yang menang
+                    statusDisplay.innerHTML = `Selamat! Pemain <span class="${currentPlayer === 'X' ? 'text-red-500' : 'text-blue-500'} font-bold">${currentPlayer}</span> Menang!`;
+                    isGameActive = false;
+                    
+                    // Highlight sel yang menang
+                    winningCells.forEach(index => {
+                        cells[index].classList.add('winning-cell');
+                    });
+
+                    // Update skor
+                    scores[currentPlayer]++;
+                    updateScoreBoard();
+                    return;
+                }
+
+                // Cek kondisi seri (draw)
+                let roundDraw = !board.includes("");
+                if (roundDraw) {
+                    statusDisplay.innerHTML = "Permainan Seri!";
+                    isGameActive = false;
+                    scores['Draws']++;
+                    updateScoreBoard();
+                    return;
+                }
+
+                // Lanjut ke pemain berikutnya
+                changePlayer();
+            }
+
+            function changePlayer() {
+                currentPlayer = currentPlayer === "X" ? "O" : "X";
+                // Update tampilan status giliran
+                statusDisplay.innerHTML = `Giliran Pemain: <span class="${currentPlayer === 'X' ? 'text-red-500' : 'text-blue-500'} font-bold">${currentPlayer}</span>`;
+            }
+
+            function restartGame() {
+                currentPlayer = "X";
+                board = ["", "", "", "", "", "", "", "", ""];
+                isGameActive = true;
+                
+                statusDisplay.innerHTML = `Giliran Pemain: <span class="text-red-500 font-bold">X</span>`;
+                
+                cells.forEach(cell => {
+                    cell.innerText = "";
+                    cell.classList.remove('x', 'o', 'winning-cell');
+                });
+            }
+
+            function updateScoreBoard() {
+                scoreXDisplay.innerText = scores['X'];
+                scoreODisplay.innerText = scores['O'];
+                scoreDrawDisplay.innerText = scores['Draws'];
+            }
+
+            cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+            resetButton.addEventListener('click', restartGame);
+        });
+    </script>
+</body>
+</html>
