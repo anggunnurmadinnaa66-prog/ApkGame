@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tic-Tac-Toe Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
@@ -42,7 +43,8 @@
             background-color: #f0f4f8;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            height: 90px;
+            /* Menggunakan aspect-ratio agar kotak selalu persegi sempurna */
+            aspect-ratio: 1 / 1; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -53,9 +55,15 @@
             user-select: none;
         }
 
-        .cell:hover {
+        /* Hanya berikan efek hover pada cell yang belum terisi */
+        .cell:not(.filled):hover {
             background-color: #e2e8f0;
             transform: scale(1.05);
+        }
+
+        /* Jika cell sudah terisi, ubah kursor */
+        .cell.filled {
+            cursor: not-allowed;
         }
 
         .cell.x {
@@ -138,10 +146,13 @@
     <div class="game-container">
         <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Tic-Tac-Toe</h1>
         
-        <div id="status" class="status-text text-gray-600">Giliran Pemain: <span id="current-player-display" class="text-red-500 font-bold">X</span></div>
+        <!-- Status Pemain -->
+        <div id="status" class="status-text text-gray-600">
+            Giliran Pemain: <span class="text-red-500 font-bold">X</span>
+        </div>
 
+        <!-- Papan Permainan -->
         <div class="board" id="board">
-            <!-- 9 Sel untuk permainan -->
             <div class="cell" data-index="0"></div>
             <div class="cell" data-index="1"></div>
             <div class="cell" data-index="2"></div>
@@ -155,6 +166,7 @@
 
         <button id="reset-button" class="reset-btn mt-4">Mulai Ulang</button>
 
+        <!-- Papan Skor -->
         <div class="score-board">
             <div class="score-item">
                 <span class="score-label">Pemain (X)</span>
@@ -175,7 +187,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             const cells = document.querySelectorAll('.cell');
             const statusDisplay = document.getElementById('status');
-            const currentPlayerDisplay = document.getElementById('current-player-display');
             const resetButton = document.getElementById('reset-button');
             const scoreXDisplay = document.getElementById('score-x');
             const scoreODisplay = document.getElementById('score-o');
@@ -185,7 +196,7 @@
             let currentPlayer = "X";
             let isGameActive = true;
             
-            // Skor
+            // Variabel Skor
             let scores = {
                 'X': 0,
                 'O': 0,
@@ -221,7 +232,8 @@
             function updateCell(cell, index) {
                 board[index] = currentPlayer;
                 cell.innerText = currentPlayer;
-                cell.classList.add(currentPlayer.toLowerCase()); // Tambah class 'x' atau 'o' untuk warna
+                // Tambahkan kelas 'x'/'o' untuk warna, dan 'filled' untuk mematikan efek hover
+                cell.classList.add(currentPlayer.toLowerCase(), 'filled'); 
             }
 
             function checkResult() {
@@ -265,7 +277,7 @@
                     return;
                 }
 
-                // Lanjut ke pemain berikutnya
+                // Jika permainan belum selesai, lanjut ke pemain berikutnya
                 changePlayer();
             }
 
@@ -284,7 +296,7 @@
                 
                 cells.forEach(cell => {
                     cell.innerText = "";
-                    cell.classList.remove('x', 'o', 'winning-cell');
+                    cell.classList.remove('x', 'o', 'winning-cell', 'filled');
                 });
             }
 
@@ -294,6 +306,7 @@
                 scoreDrawDisplay.innerText = scores['Draws'];
             }
 
+            // Mendaftarkan event listeners
             cells.forEach(cell => cell.addEventListener('click', handleCellClick));
             resetButton.addEventListener('click', restartGame);
         });
